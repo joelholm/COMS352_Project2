@@ -4,12 +4,12 @@
 * @date   4/11/19
 */
 
-#include "semAndMem.cpp"
+#include "semAndMem.h"
 
 using namespace std;
 
-void provideResourceLoop(int semID, char *data);
-void reportResourceLoop(int semID, char *data);
+void provideResourceLoop(int semID, char *data, int size);
+void reportResourceLoop(int semID, char *data, int size);
 
 int main(){
 
@@ -17,6 +17,9 @@ int main(){
   int semID = getSem();
 
   //Set up File mapping
+  struct stat buf;
+  stat("res.txt",&buf);
+  size_t fileSize = buf.st_size;
   char* data = mapFile();
 
   struct sembuf ops;
@@ -25,10 +28,10 @@ int main(){
 
   if( pid == 0 ){
     //create child to report
-    reportResourceLoop(semID, data);
+    reportResourceLoop(semID, data, fileSize);
   } else if( pid > 0 ){
     //parent will provide resources
-    provideResourceLoop(semID, data);
+    provideResourceLoop(semID, data, fileSize);
 
     //kill child proccess
     ops = {0,-1,0};
@@ -36,6 +39,9 @@ int main(){
     kill(pid, SIGKILL);
     ops = {0,1,0};
     semop(semID,&ops,1);
+
+    //unmap
+    munmap(data,fileSize);
   } else {
     cout << "Fork Failed" << endl;
   }
@@ -43,9 +49,10 @@ int main(){
   return 0;
 }
 
-void provideResourceLoop(int semdID, char *data){
+void provideResourceLoop(int semID, char *data, int size){
   //set up a loop asking if resources need to be added
   string prov,units,resource;
+  struct sembuf ops;
   while(true){
     cout << "Provide Resources (y/n) ";
     cin >> prov;
@@ -58,8 +65,9 @@ void provideResourceLoop(int semdID, char *data){
 
     cout << "Giving " << units << " units to resource " << resource << "\n\n";
 
-    //TODO: or implement dekkers algorithm
     //wait
+    ops = {0,-1,0};
+    semop(semID,&ops,1);
 
     //check if changes are legal
 
@@ -68,11 +76,12 @@ void provideResourceLoop(int semdID, char *data){
     //sync back to disk
 
     //signal
-
+    ops = {0,1,0};
+    semop(semID,&ops,1);
   }
 }
 
-void reportResourceLoop(int semID, char *data){
+void reportResourceLoop(int semID, char *data, int size){
   pid_t parentPid = getppid();
   while(true){
     //check if child dies

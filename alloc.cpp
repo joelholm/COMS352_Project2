@@ -3,7 +3,7 @@
 * @author Joel Holm
 * @date   4/11/19
 */
-#include "semAndMem.cpp"
+#include "semAndMem.h"
 
 using namespace std;
 
@@ -15,6 +15,9 @@ int main(){
   int semID = getSem();
 
   //map data
+  struct stat buf;
+  stat("res.txt",&buf);
+  size_t fileSize = buf.st_size;
   char* data = mapFile();
 
   allocateResourceLoop(semID, data);
@@ -22,14 +25,9 @@ int main(){
 
   /**
   * Thing To Do
-  *   Semaphores
-
-    OK now, I think I've figured out semaphores. To implement just start each process (alloc and prov-rep) with
-    the semaphore being initalized to 1.  This should work everytime unless it is called while a proccess
-    is in the critical section.  Just implement it because it should be ok.  If you think of a better strategy
-    then implement that.  ok thanks
-
-  *   Mutual Exclusion of printing to screen for prov-rep
+  *
+  *   OK, mutual exclusion should be down.  Just need to write some methods to change and retrieve memory.
+  *
   *   Github to pyrite
   */
 
