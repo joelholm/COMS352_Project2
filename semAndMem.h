@@ -1,3 +1,15 @@
+/**
+* semAndMem.h
+* This header file contains code to assist alloc.cpp and prov-rep.cpp in there tasks.
+* The programs alloc and prov-rep share common coding problems which are solved with
+* the functions getSem, mapFile, checkResourceUnits, and changeResourceUnits.
+* This file also contains some data structures needed to interact with System V
+* semaphores.
+*
+* @author Joel Holm
+* @date   4/18/19
+*/
+
 #include <stdio.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -15,15 +27,20 @@ using namespace std;
 #ifndef semAndMem
 #define semAndMem
 
+//memory structure needed to interface with System V semaphores
 union semun {
   int val;
   struct semid_ds *buf;
   unsigned short *array;
 };
 
-int getSem();
-char* mapFile();
-
+/**
+* getSem
+* This function goes through the necessary steps to initalize a semaphore.
+* A semaphore is created and initalized to the value 1
+*
+* @return int - representing the id of the semaphore created
+*/
 int getSem(){
   key_t semKey = ftok(".",12);
   union semun arg;
@@ -34,6 +51,12 @@ int getSem(){
   return semID;
 }
 
+/**
+* mapFile
+* This function goes through the necessary steps to map the file res.txt to memory.
+*
+* @return char* - a pointer to a char array which represents the data being mapped to memory
+*/
 char* mapFile(){
   //Map the file
   struct stat buf;
@@ -42,21 +65,19 @@ char* mapFile(){
   int res = open("res.txt", O_RDWR, 0 );
   void *mmFile = mmap(NULL, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, res, 0);
   char *data = (char*)(mmFile);
-
-
   return data;
-
-  // msync(mmFile,fileSize,0);
-  // munmap(mmFile,fileSize);
-  // close(res);
 }
 
-//function which vertifies that a resource exists
 /**
+* checkResourceUnits
+* This function takes a pointer to memory mapped file - data - and finds the resource indicated
+* by the parameter checkResource.  The parameter size is needed to prevent a memory leak.
+* Upon finding the resource checkResource, this function returns the number of units currently
+* provided by that resource.  If the resource does not exist a -1 will be returned.
 *
 * @param    char* data - the mapped data
-*           int checkResource - the resource number
-*           int size - the size of the data
+* @param    int checkResource - the resource number
+* @param    int size - the size of the data
 * @return   int - the number of this resource type which are available.
 *               returns -1 if the resource doesn't exist.
 */
@@ -88,12 +109,26 @@ int checkResourceUnits(char* data, int size, int checkResource){
     }
     i++;
   }
-
   //couldn't find it return -1
   return -1;
 }
 
-int changeResouceUnits(char* data, int size, int checkResource, int newUnits){
+/**
+* changeResourceUnits
+* This function takes a pointer to memory mapped file - data - and changes the resource indicated
+* by the parameter checkResource to that of the parameter newUnits.  The parameter size is needed
+* to prevent a memory leak. Upon finding the resource checkResource, this function changes the data
+* of the respected resource.  Upon success the new unit assigned is returned.  Upon failure, this
+* function returns -1.
+*
+* @param    char* data - the mapped data
+* @param    int checkResource - the resource number
+* @param    int size - the size of the data
+* @param    int newUnits - the new unit value to be written
+* @return   int - the number of this resource type which are available.
+*               returns -1 if the resource doesn't exist.
+*/
+int changeResourceUnits(char* data, int size, int checkResource, int newUnits){
   //validate that new units is 0-9
   if( newUnits < 0 || newUnits > 9 ){
     return -1;
