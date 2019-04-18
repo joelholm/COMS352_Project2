@@ -3,39 +3,32 @@
 * @author Joel Holm
 * @date   4/11/19
 */
-#include <stdio.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
-#include <sys/sem.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <iostream>
-#include <string.h>
-
-#define MAX_STRL 10
+#include "semAndMem.cpp"
 
 using namespace std;
 
-void mapFile();
-void allocateResourceLoop();
+void allocateResourceLoop(int semID, char *data);
 
 int main(){
 
-  //mapFile();
-  semget(99,2,0);
+  //create semaphore
+  int semID = getSem();
 
+  //map data
+  char* data = mapFile();
 
-  allocateResourceLoop();
+  allocateResourceLoop(semID, data);
 
 
   /**
   * Thing To Do
-  *
-
-      HEY, GO TO CANVAS AND CHECK OUT THAT DEMO FILE THING, WILL PROBABLY HELP ALOT
-
-  *   Makefile
   *   Semaphores
+
+    OK now, I think I've figured out semaphores. To implement just start each process (alloc and prov-rep) with
+    the semaphore being initalized to 1.  This should work everytime unless it is called while a proccess
+    is in the critical section.  Just implement it because it should be ok.  If you think of a better strategy
+    then implement that.  ok thanks
+
   *   Mutual Exclusion of printing to screen for prov-rep
   *   Github to pyrite
   */
@@ -45,48 +38,44 @@ int main(){
   return 0;
 }
 
-void allocateResourceLoop(){
+void allocateResourceLoop(int semID, char *data){
   //set up a loop asking if resources need to be added
-  string numUnits,resourceNum;
+  string numUnits, alloc;
+  string units, resource;
+  struct sembuf ops;
   while(true){
-    printf("Allocate Resources (Enter q to exit)\n");
-    cout << "Resource type: ";
-    cin >> resourceNum;
-    if( resourceNum.compare("q") == 0 ){ break; }
-    cout << "How many units: ";
-    cin >> numUnits;
-    if( numUnits.compare("q") == 0 ){ break; }
+    cout << "Allocate Resources (y/n) ";
+    cin >> alloc;
+    if( alloc.compare("n") == 0 ){
+      break;
+    }
+    cout << "Enter type and number of resources: ";
+    cin >> resource;
+    cin >> units;
 
-    cout << "Giving " << numUnits << " resources to resource " << resourceNum << "\n\n";
+    cout << "Giving " << units << " units to resource " << resource << "\n\n";
+
+
+    //mutual exclusion
+
+    //wait
+    ops = {0,-1,0};
+    semop(semID,&ops,1);
+
+    //check if changes are legal
+
+    //make changes to mmaped data
+
+    //sync back to disk
+
+    //signal
+    ops = {0,1,0};
+    semop(semID,&ops,1);
+
+    //maybe
+    //just for a test, ask if a num should be changed
+
+    //if yes ask for a num and then change it
 
   }
 }
-
-
-void mapFile(){
-  //Map the file
-  struct stat buf;
-  stat("res.txt",&buf);
-  size_t fileSize = buf.st_size;
-  int res = open("res.txt", O_RDWR, 0 );
-  void *mmFile = mmap(NULL, fileSize, PROT_READ | PROT_WRITE, MAP_SHARED, res, 0);
-  char *data;
-  data = (char*)(mmFile);
-
-  printf("FD: %d\tMMFile: %d\n",res,(mmFile != MAP_FAILED));
-
-  printf("Pointer: %p\n", mmFile);
-
-  data[4] = 'f';
-
-  printf("String: %c\n",data[4]);
-
-  msync(mmFile,fileSize,0);
-
-  munmap(mmFile,fileSize);
-  close(res);
-}
-
-
-
-//semop man page
