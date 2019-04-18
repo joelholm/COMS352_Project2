@@ -63,17 +63,30 @@ void provideResourceLoop(int semID, char *data, int size){
     cin >> resource;
     cin >> units;
 
-    cout << "Giving " << units << " units to resource " << resource << "\n\n";
+    int resourceNum = stoi(resource,nullptr,10), unitsNum = stoi(units,nullptr,10);
 
     //wait
     ops = {0,-1,0};
     semop(semID,&ops,1);
 
     //check if changes are legal
+    int availableUnits = checkResourceUnits(data, size, resourceNum);
+    if( availableUnits != -1 ){
+      int newUnits = availableUnits + unitsNum;
+      if( newUnits < 10 ){
+        //make changes to mmaped data
+        changeResouceUnits(data,size,resourceNum,newUnits);
 
-    //make changes to mmaped data
+        //sync back to disk
+        msync((void*)data,size,0);
 
-    //sync back to disk
+        cout << "Providing " << unitsNum << " units to resource " << resourceNum << "\n\n";
+      } else {
+        cout << "Cannot provide to resource " << resourceNum << " because that would excede 9 units" << endl;
+      }
+    } else {
+      cout << "No such resource, no changes made" << endl;
+    }
 
     //signal
     ops = {0,1,0};
@@ -90,6 +103,6 @@ void reportResourceLoop(int semID, char *data, int size){
     //write all the stuff
     //TODO:
 
-    sleep(2);
+    sleep(10);
   }
 }
