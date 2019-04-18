@@ -7,7 +7,7 @@
 
 using namespace std;
 
-void allocateResourceLoop(int semID, char *data);
+void allocateResourceLoop(int semID, char *data, int size);
 
 int main(){
 
@@ -21,7 +21,7 @@ int main(){
   char* data = mapFile();
 
 
-  //allocateResourceLoop(semID, data);
+  allocateResourceLoop(semID, data, fileSize);
 
 
   /**
@@ -37,7 +37,7 @@ int main(){
   return 0;
 }
 
-void allocateResourceLoop(int semID, char *data){
+void allocateResourceLoop(int semID, char *data, int size){
   //set up a loop asking if resources need to be added
   string numUnits, alloc;
   string units, resource;
@@ -52,30 +52,35 @@ void allocateResourceLoop(int semID, char *data){
     cin >> resource;
     cin >> units;
 
-    cout << "Giving " << units << " units to resource " << resource << "\n\n";
-
+    int resourceNum = stoi(resource,nullptr,10), unitsNum = stoi(units,nullptr,10);
 
     //mutual exclusion
-
     //wait
     ops = {0,-1,0};
     semop(semID,&ops,1);
 
     //check if changes are legal
-    if( )
+    int availableUnits = checkResourceUnits(data, size, resourceNum);
+    if( availableUnits != -1 ){
+      int newUnits = availableUnits - unitsNum;
+      if( newUnits >= 0 ){
+        //make changes to mmaped data
+        changeResouceUnits(data,size,resourceNum,newUnits);
 
-    //make changes to mmaped data
+        //sync back to disk
+        msync((void*)data,size,0);
 
-    //sync back to disk
+        cout << "Allocating " << unitsNum << " units from resource " << resourceNum << "\n\n";
+      } else {
+        cout << "Not enough units exist of resource " << resourceNum << endl;
+      }
+    } else {
+      cout << "No such resource, no changes made" << endl;
+    }
 
     //signal
     ops = {0,1,0};
     semop(semID,&ops,1);
 
-    //maybe
-    //just for a test, ask if a num should be changed
-
-    //if yes ask for a num and then change it
-
-  }
+  }//end of while
 }
