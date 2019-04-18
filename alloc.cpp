@@ -20,7 +20,8 @@ int main(){
   size_t fileSize = buf.st_size;
   char* data = mapFile();
 
-  allocateResourceLoop(semID, data);
+
+  //allocateResourceLoop(semID, data);
 
 
   /**
@@ -61,6 +62,7 @@ void allocateResourceLoop(int semID, char *data){
     semop(semID,&ops,1);
 
     //check if changes are legal
+    if( )
 
     //make changes to mmaped data
 

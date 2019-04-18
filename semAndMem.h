@@ -93,4 +93,41 @@ int checkResourceUnits(char* data, int size, int checkResource){
   return -1;
 }
 
+int changeResouceUnits(char* data, int size, int checkResource, int newUnits){
+  //validate that new units is 0-9
+  if( newUnits < 0 || newUnits > 9 ){
+    return -1;
+  }
+  int resource = -1, unitsLoc = -1;
+
+  //go through each resource line by scanning one character at a time
+  int i = 0;
+  while( i < size ){
+    //if this character is an int and resource is not -1
+    if( resource != -1 && isdigit(data[i]) ){
+      //then set it to units
+      unitsLoc = i;
+      //check if the resource matches
+      if( resource == checkResource ){
+        //change the units and return the units changed
+        data[unitsLoc] = (char)('0' + newUnits);
+        return newUnits;
+      }
+    }
+    //if this character is an int and resource is -1
+    if( resource == -1 && isdigit(data[i]) ){
+      //assign resouce
+      resource = data[i] - '0';
+    }
+    //if this character is the return character
+    if( data[i] == '\n' ){
+      //then reset resource and units
+      resource = -1;
+      unitsLoc = -1;
+    }
+    i++;
+  }
+  return -1;
+}
+
 #endif
