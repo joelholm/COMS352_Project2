@@ -1,11 +1,12 @@
-Write how to setup
+Included in the zipped folder are 6 files
+  alloc.cpp
+  prov-rep.cpp
+  res.txt
+  semAndMem.h
+  Makefile
+  README.txt
 
-alloc first guarentees clean ren
+To compile my code, enter 'make'.  Then to run, in different terminal windows enter './alloc' and './prov-rep.'
 
-
-
-
-
-TODO:
-  Test code on pyrite
-  Documentation  <---
+If the semaphore I'm using conflicts with another student's semaphore in pyrite, the key can be
+changed in semAndMem.h:45.
