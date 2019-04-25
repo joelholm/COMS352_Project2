@@ -1,0 +1,8 @@
+First string
+second string
+hello world
+
+
+more text rick
+
+new line

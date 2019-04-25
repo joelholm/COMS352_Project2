@@ -1,4 +1,4 @@
-main: semAndMem alloc prov-rep
+main: semAndMem alloc prov-rep hw8
 
 alloc: alloc.cpp semAndMem.o
 	g++ alloc.cpp -o alloc
@@ -8,6 +8,9 @@ prov-rep: prov-rep.cpp
 
 semAndMem: semAndMem.h
 	g++ -c semAndMem.h -o semAndMem.o
+
+homework8: hw8.cpp
+	g++ hw8.cpp -o hw8
 
 clean:
 	rm -f alloc
